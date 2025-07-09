@@ -1,0 +1,179 @@
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>R01-Inventory</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+
+    <!-- Utilities -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" />
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
+    <link href="style.css" rel="stylesheet" type="text/css" />
+
+    <!-- Fontawesome / Bootstrap / Material Icons -->
+    <link rel="stylesheet" href="https://kit-pro.fontawesome.com/releases/v6.3.0/css/pro.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <link href='https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap' rel='stylesheet' />
+</head>
+
+<body>
+    <div class="prompt-layout" @tab.prevent>
+        <div class="prompt-menu" @tab.prevent>
+            <div class="bg center"></div>
+    
+            <div class="wrapper center" @tab.prevent>
+                <h1>{{title}}</h1>
+                <p v-html="description"></p>
+        
+                <input @tab.prevent @keyup.tab="usePrompt(true)" v-model="response">
+        
+                <div class="options">
+                    <p @click="usePrompt(true)">CONFIRM</p>
+                    <p @click="usePrompt(false)">CANCEL</p>
+                </div>
+            </div>
+        
+        </div>
+    </div>
+
+    <div class="fastSlotsPreview" v-if = "active">
+        <div class="slots">
+            <div class="slot fastInv" id = "fastSlotPreview-0"></div>
+            <div class="slot fastInv" id = "fastSlotPreview-1"></div>
+            <div class="slot fastInv" id = "fastSlotPreview-2"></div>
+            <div class="slot fastInv" id = "fastSlotPreview-3"></div>
+            <div class="slot fastInv" id = "fastSlotPreview-4"></div>
+            <div class="slot fastInv" id = "fastSlotPreview-5"></div>
+            <div class="slot fastInv" id = "fastSlotPreview-6"></div>
+        </div>
+    </div>
+
+    <div class="inventory-wrapper" v-if = "active" @click = "closeItemInfo()">
+
+        <div class="iteminfo-container">
+            <div class="iteminfo-box">
+                <div class="iteminfo-item">
+                    <div class="details">
+                        <h2 class="item_name">{{ selectedItem.label }} <a>X{{ selectedItem.amount }}</a></h2>
+                        <p class="weight">Weight: {{ selectedItem.weight }} KG</p>
+                        <p class="description">{{ selectedItem.desc }}</p>
+                        <img :src="'./img/' + selectedItem.item + '.png'" onerror="handleImageError(this)" draggable="false">
+                        <div class="buttons">
+                            <button @click = "useItem(selectedItem.item)">Use</button>
+                            <button @click = "giveItem(selectedItem.item)">Give</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="left-data">
+            <div class="char-data">
+                <p>{{ charName }}</p>
+            </div>
+
+            <div class="cloth-data">
+                <div>
+                    <div class="slot" @click = "useCloth('cap')"><img src = "cloth/cap.svg"></div>
+                    <div class="slot" @click = "useCloth('watch')"><img src = "cloth//watch.svg"></div>
+                    <div class="slot" @click = "useCloth('chain')"><img src = "cloth//chain.svg"></div>
+                    <div class="slot" @click = "useCloth('jacket')"><img src = "cloth//jacket.svg"></div>
+                    <div class="slot" @click = "useCloth('shoes')"><img src = "cloth//shoes.svg"></div>
+                </div>
+
+                <svg width="183" height="434" viewBox="0 0 183 434" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M94.2271 248.148C93.5892 255.66 98.6882 295.422 101.319 311.013C102.572 318.399 106.007 330.433 104.771 336.823C103.007 345.728 102.497 357.252 103.468 363.963C104.081 368.038 106.009 386.833 103.25 393.707C101.806 397.312 99.1603 415.786 99.1603 415.786C92.2672 433.189 96.1576 432.333 96.1576 432.333C98.2916 434.952 101.947 432.539 101.947 432.539C104.731 434.314 106.66 432.117 106.66 432.117C109.05 434.096 111.836 431.874 111.836 431.874C114.839 433.433 117.624 430.558 117.624 430.558C119.349 431.427 119.77 430.329 119.77 430.329C124.945 429.998 116.883 413.438 116.883 413.438C114.952 398.564 118.799 390.286 118.799 390.286C131.397 352.925 132.037 343.011 127.001 328.931C125.583 324.866 125.224 323.257 125.877 321.492C127.385 317.419 126.286 301.037 128.126 294.532C131.676 281.986 135.179 250.169 137.004 235.323C139.457 215.326 128.315 188.513 128.315 188.513C125.874 177.602 129.452 138.726 129.452 138.726C134.448 146.5 134.257 160.223 134.257 160.223C133.464 174.616 145.884 196.613 145.884 196.613C151.852 205.703 154.112 214.327 154.112 214.967C154.112 217.586 153.539 223.925 153.539 223.925L153.768 229.446C153.871 230.852 154.662 235.693 154.534 238.032C153.602 252.431 155.889 249.722 155.889 249.722C157.82 249.722 159.941 238.135 159.941 238.135C159.941 241.123 159.211 250.068 160.822 253.442C162.751 257.467 164.169 252.752 164.194 251.806C164.704 233.472 165.806 238.276 165.806 238.276C166.878 253.149 168.196 256.508 170.559 255.346C172.349 254.492 170.712 237.497 170.712 237.497C173.778 247.592 176.103 249.2 176.103 249.2C181.162 252.752 178.033 242.94 177.33 240.997C173.587 230.673 173.471 227.096 173.471 227.096C178.149 236.372 181.674 236.028 181.674 236.028C186.236 234.572 177.687 221.436 172.678 215.143C170.122 211.937 166.826 207.644 165.869 205.094C164.31 200.776 163.133 186.893 163.133 186.893C162.661 170.511 158.611 163.396 158.611 163.396C151.686 152.312 150.383 131.637 150.383 131.637L150.077 96.7313C147.649 72.9213 130.105 72.7492 130.105 72.7492C112.372 70.1095 109.904 64.381 109.904 64.381C106.148 58.9757 108.294 48.614 108.294 48.614C111.41 46.0792 112.613 39.3498 112.613 39.3498C117.787 35.3818 117.533 29.5757 115.143 29.6386C113.226 29.689 113.66 28.1005 113.66 28.1005C116.896 1.96346 93.692 0.628906 93.692 0.628906H90.15C90.15 0.628906 66.9359 1.96346 70.1674 28.0942C70.1674 28.0942 70.6017 29.6848 68.6671 29.6323C66.2833 29.5694 66.0609 35.3755 71.2166 39.3435C71.2166 39.3435 72.4168 46.0708 75.535 48.6077C75.535 48.6077 77.6816 58.9694 73.9255 64.3747C73.9255 64.3747 71.4663 70.1032 53.7247 72.7429C53.7247 72.7429 36.151 72.915 33.761 96.725L33.4295 131.631C33.4295 131.631 32.1516 152.306 25.1997 163.39C25.1997 163.39 21.1688 170.507 20.7029 186.887C20.7029 186.887 19.5216 200.77 17.9688 205.088C17.0224 207.625 13.728 211.918 11.1513 215.137C6.09843 221.417 -2.39361 234.526 2.14932 236.022C2.14932 236.022 5.69344 236.366 10.3518 227.089C10.3518 227.089 10.2553 230.642 6.51809 240.991C5.78367 242.909 2.65923 252.721 7.72045 249.193C7.72045 249.193 10.0643 247.584 13.1111 237.491C13.1111 237.491 11.4765 254.485 13.2958 255.339C15.6732 256.504 16.97 253.142 18.0422 238.269C18.0422 238.269 19.1418 233.466 19.6517 251.799C19.6769 252.746 21.0639 257.461 23.0006 253.436C24.6353 250.062 23.9008 241.131 23.9008 238.129C23.9008 238.129 25.9971 249.716 27.9569 249.716C27.9569 249.716 30.263 252.425 29.3167 238.026C29.1635 235.674 29.9881 230.845 30.091 229.439L30.3134 223.919C30.3134 223.919 29.7384 217.594 29.7384 214.961C29.7384 214.308 32.0005 205.697 37.9661 196.607C37.9661 196.607 50.3736 174.599 49.5742 160.217C49.5742 160.217 49.4021 146.494 54.3983 138.719C54.3983 138.719 57.9445 177.593 55.5419 188.507C55.5419 188.507 44.3807 215.32 46.8421 235.317C48.6551 250.203 52.1509 281.978 55.7097 294.526C57.5689 301.018 56.4694 317.396 57.9592 321.486C58.6307 323.263 58.2781 324.9 56.8345 328.924C51.8257 343.004 52.4636 352.921 65.0621 390.28C65.0621 390.28 68.9398 398.558 66.98 413.431C66.98 413.431 58.9307 429.991 64.0864 430.323C64.0864 430.323 64.4893 431.42 66.233 430.552C66.233 430.552 69.0175 433.426 72.0265 431.867C72.0265 431.867 74.8131 434.092 77.1948 432.111C77.1948 432.111 79.1043 434.308 81.8888 432.533C81.8888 432.533 85.5441 434.998 87.7159 432.327C87.7159 432.327 91.5748 433.183 84.7048 415.779C84.7048 415.779 82.0734 397.329 80.6235 393.7C77.8578 386.828 79.8114 367.994 80.401 363.956C81.3516 357.208 80.8417 345.711 79.1043 336.816C77.8326 330.441 81.276 318.405 82.5476 311.007C85.1601 295.43 90.2801 255.667 89.6401 248.142L91.7552 248.885C93.2702 248.889 94.2271 248.148 94.2271 248.148Z" fill="white" fill-opacity="0.1"/>
+                </svg>
+                    
+                <div>
+                    <div class="slot" @click = "useCloth('mask')"><img src = "cloth//mask.svg"></div>
+                    <div class="slot" @click = "useCloth('glasses')"><img src = "cloth//glasses.svg"></div>
+                    <div class="slot" @click = "useCloth('gloves')"><img src = "cloth//gloves.svg"></div>
+                    <div class="slot" @click = "useCloth('shirt')"><img src = "cloth//shirt.svg"></div>
+                    <div class="slot" @click = "useCloth('pants')"><img src = "cloth//pants.svg"></div>
+                </div>
+            </div>
+
+            <div class="destroy-data">
+                <img src="cloth//trash.svg">
+                <p>Muta-ti itemele aici pentru a le distruge, odata distruse nu mai pot fi recuperate</p>
+            </div>
+        </div>
+
+        <div class="center-data">
+            <div class="userItems">
+                <p>Inventory <a>{{ myWeight }}</a></p>
+                <div class="slots">
+                    <div class="slot userInv" data-slotId = "0" id = "userSlot-0"></div>
+                    <div class="slot userInv" data-slotId = "1" id = "userSlot-1"></div>
+                    <div class="slot userInv" data-slotId = "2" id = "userSlot-2"></div>
+                    <div class="slot userInv" data-slotId = "3" id = "userSlot-3"></div>
+                    <div class="slot userInv" data-slotId = "4" id = "userSlot-4"></div>
+                    <div class="slot userInv" data-slotId = "5" id = "userSlot-5"></div>
+                    <div class="slot userInv" data-slotId = "6" id = "userSlot-6"></div>
+
+                    <div class="slot userInv" data-slotId = "7" id = "userSlot-7"></div>
+                    <div class="slot userInv" data-slotId = "8" id = "userSlot-8"></div>
+                    <div class="slot userInv" data-slotId = "9" id = "userSlot-9"></div>
+                    <div class="slot userInv" data-slotId = "10" id = "userSlot-10"></div>
+                    <div class="slot userInv" data-slotId = "11" id = "userSlot-11"></div>
+                    <div class="slot userInv" data-slotId = "12" id = "userSlot-12"></div>
+                    <div class="slot userInv" data-slotId = "13" id = "userSlot-13"></div>
+
+                    <div class="slot userInv" data-slotId = "14" id = "userSlot-14"></div>
+                    <div class="slot userInv" data-slotId = "15" id = "userSlot-15"></div>
+                    <div class="slot userInv" data-slotId = "16" id = "userSlot-16"></div>
+                    <div class="slot userInv" data-slotId = "17" id = "userSlot-17"></div>
+                    <div class="slot userInv" data-slotId = "18" id = "userSlot-18"></div>
+                    <div class="slot userInv" data-slotId = "19" id = "userSlot-19"></div>
+                    <div class="slot userInv" data-slotId = "20" id = "userSlot-20"></div>
+
+                    <div class="slot userInv" data-slotId = "21" id = "userSlot-21"></div>
+                    <div class="slot userInv" data-slotId = "22" id = "userSlot-22"></div>
+                    <div class="slot userInv" data-slotId = "23" id = "userSlot-23"></div>
+                    <div class="slot userInv" data-slotId = "24" id = "userSlot-24"></div>
+                    <div class="slot userInv" data-slotId = "25" id = "userSlot-25"></div>
+                    <div class="slot userInv" data-slotId = "26" id = "userSlot-26"></div>
+                    <div class="slot userInv" data-slotId = "27" id = "userSlot-27"></div>
+
+                    <div class="slot userInv" data-slotId = "28" id = "userSlot-28"></div>
+                    <div class="slot userInv" data-slotId = "29" id = "userSlot-29"></div>
+                    <div class="slot userInv" data-slotId = "30" id = "userSlot-30"></div>
+                    <div class="slot userInv" data-slotId = "31" id = "userSlot-31"></div>
+                    <div class="slot userInv" data-slotId = "32" id = "userSlot-32"></div>
+                    <div class="slot userInv" data-slotId = "33" id = "userSlot-33"></div>
+                    <div class="slot userInv" data-slotId = "34" id = "userSlot-34"></div>
+                </div>
+            </div>
+
+            <div class="fastSlots">
+                <p>Fast Slots</p>
+                <div class="slots">
+                    <div class="slot fastInv" id = "fastSlot-0" data-slotId = "0"><p>1</p></div>
+                    <div class="slot fastInv" id = "fastSlot-1" data-slotId = "1"><p>2</p></div>
+                    <div class="slot fastInv" id = "fastSlot-2" data-slotId = "2"><p>3</p></div>
+                    <div class="slot fastInv" id = "fastSlot-3" data-slotId = "3"><p>4</p></div>
+                    <div class="slot fastInv" id = "fastSlot-4" data-slotId = "4"><p>5</p></div>
+                    <div class="slot fastInv" id = "fastSlot-5" data-slotId = "5"><p>6</p></div>
+                    <div class="slot fastInv" id = "fastSlot-6" data-slotId = "6"><p>7</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="secondInventory">
+            <p>Second Inventory <a>{{ secondData.weight }}</a></p>
+            <div class="slots">
+                <div class="slot secondInv" v-for = "id in secondData.slots" :data-slotId = "id - 1" :id = "'secondSlot-' + (id - 1)"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src='main.js'></script>
+</body>
+</html>
