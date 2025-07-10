@@ -345,7 +345,7 @@ const inventoryMenu = new Vue({
 
 
                 for (let slotId = 0; slotId <= 6; slotId++){
-                    $("#fastSlot-" + slotId).empty();
+                    $("#fastSlot-" + slotId).html(`<p>${slotId + 1}</p>`);
                     $("#fastSlotPreview-" + slotId).empty();
 
                     if (inventoryMenu.fastSlots[slotId]) {                        
@@ -357,7 +357,7 @@ const inventoryMenu = new Vue({
 
                     
                         $("#fastSlotPreview-" + slotId).append(`
-                            <img onerror = "handleImageError(this)" src = "img/${inventoryMenu.userItems[itemSlot].item}.png">
+                            <img onerror = "handleImageError(this)" src = "img/${inventoryMenu.userItems[itemExist].item}.png">
                         `)
 
                         $("#fastSlot-" + slotId + " > img").on( "contextmenu", function() {
@@ -404,12 +404,13 @@ const inventoryMenu = new Vue({
             this.makeItem(itemSlot)
         },
         
-        makeItem(itemSlot, second) {
+        makeItem(itemSlot, second) {            
             const element = second ? this.secondData.items[itemSlot] : this.userItems[itemSlot];
-            
+                          
+
             $(second ? "#secondSlot-" + itemSlot : "#userSlot-" + itemSlot).empty();
 
-            if (element) {
+            if (element) {                
                 $(second ? "#secondSlot-" + itemSlot : "#userSlot-" + itemSlot).append(`
                     <img onerror = "handleImageError(this)" src = "img/${element.item}.png" data-itemSlot = "${itemSlot}" data-where = "${second ? 'second' : 'main'}">
                     <p>${element.amount}</p>
@@ -460,9 +461,9 @@ const inventoryMenu = new Vue({
                 element.css("top", itemOffset.top);
         
                 let leftOffset = itemOffset.left;
-                // if (leftOffset + element.width() > $(window).width()) {
-                //     leftOffset = $(window).width() - element.width() - 20;
-                // }
+                if (leftOffset + element.width() > $(window).width()) {
+                    leftOffset = $(window).width() - element.width() - 20;
+                }
         
                 element.css("left", leftOffset);
         
@@ -514,7 +515,7 @@ const inventoryMenu = new Vue({
 
             if (promptManager.active) promptManager.hidePrompt();
 
-            sendPost("setFocus", [false]);
+            sendPost("inventory:closeInventory", []);
         },
     },
 });
