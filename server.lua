@@ -13,8 +13,10 @@ RegisterServerEvent('r01:inventory:giveItem')
 
 local fastSlots = setmetatable({}, {__index = function(self, key) self[key] = {} return {} end})
 local Inventory = {itemsData = {}}; GlobalState['r01:inventoryItems'] = Inventory.itemsData
+local _rName = GetCurrentResourceName()
 local Drops = {}
 local finishSync = false
+local isDBconnected = false
 local serverData = setmetatable({}, {
     __index = function(self, key)
         self[key] = {}
@@ -52,18 +54,6 @@ local serverData = setmetatable({}, {
         rawset(self, key, value)
     end
 })
-
-local isDBconnected = false
-if Config.dataBaseType == 'mongodb' then
-    AddEventHandler('onDatabaseConnect', function()
-        isDBconnected = true
-    end)
-else
-    MySQL.ready(function()
-        isDBconnected = true
-        MySQL.query('CREATE TABLE IF NOT EXISTS inventories (inventoryId VARCHAR(255) PRIMARY KEY, inventoryData TEXT)')
-    end)
-end
 
 local getSlotByItem <const> = function(items, item)
     local theSlot = ""
@@ -475,6 +465,31 @@ end; AddEventHandler('r01:inventory:setFastSlot', setFastSlot)
 --======================================= OTHERS =======================================--
 --======================================================================================--
 
+if Config.dataBaseType == 'mongodb' then
+    AddEventHandler('onDatabaseConnect', function()
+        isDBconnected = true
+
+        print(('^2[%s]^7: Database connection established!'):format(_rName))
+    end)
+
+    AddEventHandler('onResourceStart', function(rName)
+        if rName ~= _rName then return end
+
+        if exports[Config.dataBaseName]:isConnected() then
+            isDBconnected = true
+        else
+            print(('^1[%s]^7: Database connection failed!'):format(_rName))
+        end
+    end)
+else
+    MySQL.ready(function()
+        isDBconnected = true
+
+        print(('^2[%s]^7: Database connection established!'):format(_rName))
+        MySQL.query('CREATE TABLE IF NOT EXISTS inventories (inventoryId VARCHAR(255) PRIMARY KEY, inventoryData TEXT)')
+    end)
+end
+
 local fetchInventory <const> = function()
     if not isDBconnected then return end
 
@@ -504,7 +519,7 @@ local playerLeave <const> = function()
 end; AddEventHandler('playerDropped', playerLeave)
 
 local resourceStop <const> = function(rName)
-    if rName ~= GetCurrentResourceName() then return end
+    if rName ~= _rName then return end
     if not isDBconnected then return end
 
     for id, data in pairs(serverData) do
