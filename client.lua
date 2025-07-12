@@ -1,5 +1,12 @@
 RegisterNetEvent("r01:inventory:sendNuiMessage")
 
+RegisterNetEvent('r01:client:createDrop')
+RegisterNetEvent('r01:client:removeDrop')
+
+RegisterNetEvent("r01:client:equipWeapon")
+RegisterNetEvent("r01:client:doReload")
+RegisterNetEvent("r01:client:removeWeapon")
+
 AddEventHandler("r01:inventory:sendNuiMessage", function(...)
     SendNUIMessage(...)
 end)
@@ -10,6 +17,11 @@ RegisterNuiCallback('setFocus', function(data, cb)
     cb('ok')
 end)
 
+Citizen.CreateThread(function()
+    SendNUIMessage({event = 'setLanguage', lang = Config.Lang[Config.selectedLanguage] or Config.Lang['en']})
+end)
+
+local equippedWeapon
 local fastSlots = {}
 local Drops = {}
 local needToCloseCar
@@ -107,7 +119,7 @@ RegisterCommand('r01ScriptsOpenInventory', function()
     TriggerServerEvent('r01:inventory:open', second)
 end)
 
-RegisterKeyMapping('r01ScriptsOpenInventory', 'Acceseaza inventarul', 'keyboard', Config.openKeyBind)
+RegisterKeyMapping('r01ScriptsOpenInventory', getLang('acces_inventory'), 'keyboard', Config.openKeyBind)
 
 for i = 1, 5 do
     RegisterCommand('useR01fastItem_'..i, function()
@@ -117,7 +129,7 @@ for i = 1, 5 do
         end
     end)
 
-    RegisterKeyMapping('useR01fastItem_'..i, 'Foloseste slorul '..i, 'keyboard', i)
+    RegisterKeyMapping('useR01fastItem_'..i, getLang('use_slot')..' '..i, 'keyboard', i)
 end
 
 for k in pairs(uiLink) do
@@ -168,12 +180,10 @@ RegisterNuiCallback("inventory:getItemData", function(data, cb)
     )
 end)
 
-RegisterNetEvent('r01:client:createDrop')
 AddEventHandler('r01:client:createDrop', function(data)
     table.insert(Drops, data)
 end)
 
-RegisterNetEvent('r01:client:removeDrop')
 AddEventHandler('r01:client:removeDrop', function(theId)    
     for k, v in pairs(Drops) do
         if v.id == theId then
@@ -220,4 +230,59 @@ RegisterCommand('r01ScriptsShowFastSlots', function()
     SendNUIMessage({event = 'showFastSlotsPreview', data = fastSlots})
 end)
 
-RegisterKeyMapping('r01ScriptsShowFastSlots', 'Arata sloturile rapide', 'keyboard', Config.showFastSlotsKeyBind)
+RegisterKeyMapping('r01ScriptsShowFastSlots', getLang('show_fast_slots'), 'keyboard', Config.showFastSlotsKeyBind)
+
+function GetWeaponClipInfo(weapon)
+    local ped = PlayerPedId()
+    local weaponHash = GetHashKey(weapon)
+
+    if not HasPedGotWeapon(ped, weaponHash, false) then
+        return 0, 0
+    end
+
+    local currentAmmo = GetAmmoInPedWeapon(ped, weaponHash)
+    local maxClip = GetMaxAmmoInClip(ped, weaponHash, true)
+
+    return maxClip, currentAmmo
+end
+
+-- weapon handling
+AddEventHandler("r01:client:equipWeapon", function(weaponName)
+    local ped = PlayerPedId()
+    GiveWeaponToPed(ped, GetHashKey(weaponName), 0, false, true)
+
+    equippedWeapon = weaponName
+end)
+
+RegisterCommand("r01ScriptsReloadWeapon", function()
+    if not equippedWeapon or equippedWeapon == "WEAPON_UNARMED" or not Config.waponsList[equippedWeapon][4] then
+        return
+    end
+
+    local maxClip, currentClip = GetWeaponClipInfo(equippedWeapon)
+
+    if currentClip >= maxClip then return end
+
+    TriggerServerEvent("r01:inventory:tryReload", equippedWeapon, maxClip - currentClip)
+end)
+
+RegisterKeyMapping('r01ScriptsReloadWeapon', getLang('reload_weapon'), 'keyboard', 'R')
+
+AddEventHandler("r01:client:doReload", function(ammoAmount)
+    local ped = PlayerPedId()
+    local weaponHash = GetHashKey(equippedWeapon)
+    
+    if HasPedGotWeapon(ped, weaponHash, false) then
+        AddAmmoToPed(ped, weaponHash, ammoAmount)
+    end
+end)
+
+AddEventHandler("r01:client:removeWeapon", function(weaponName)
+    local ped = PlayerPedId()
+    local weaponHash = GetHashKey(weaponName)
+
+    if HasPedGotWeapon(ped, weaponHash, false) then
+        RemoveWeaponFromPed(ped, weaponHash)
+        equippedWeapon = nil
+    end
+end)

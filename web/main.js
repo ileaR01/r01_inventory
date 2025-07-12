@@ -24,19 +24,23 @@ window.addEventListener("message",function(evt){
     switch(data.event){
         case 'openInventory':
             inventoryMenu.buildInventory(data.data);
-        break
+        break;
 
         case 'addInventoryItem':
             inventoryMenu.addItem(data.data[0], data.data[1]);
-        break
+        break;
         
         case 'removeInventoryItem':
             inventoryMenu.removeItem(data.data[0], data.data[1]);
-        break
+        break;
 
         case 'showFastSlotsPreview':
             fastSlotsPreview.showFastSlotsPreview(data.data);
-        break
+        break;
+
+        case 'setLanguage':
+            inventoryMenu.Lang = data.data;
+        break;
     }
 });
 
@@ -179,8 +183,8 @@ const inventoryMenu = new Vue({
                             if (inventoryMenu.userItems[slotId] && slotId != itemExist) return;
                         
                             let amount = await promptManager.createPrompt(
-                                'Move Item', 
-                                "Introdu in caseta de mai jos cantitatea pe care doresti sa o iei inventar, apoi apasa pe butonul de confirmare."
+                                inventoryMenu.Lang["move_item"], 
+                                inventoryMenu.Lang["move_item_desc"]
                             );
 
                             if (!amount) return;
@@ -241,8 +245,8 @@ const inventoryMenu = new Vue({
                             if (inventoryMenu.secondData.items[slotId] && slotId != itemExist) return;
 
                             let amount = await promptManager.createPrompt(
-                                'Move Item', 
-                                "Introdu in caseta de mai jos cantitatea pe care doresti sa o muti din inventar, apoi apasa pe butonul de confirmare."
+                                inventoryMenu.Lang["move_item"], 
+                                inventoryMenu.Lang["move_item_desc"]
                             );
 
                             if (!amount) return;
@@ -297,8 +301,8 @@ const inventoryMenu = new Vue({
 
                         if (itemWhere == "main") {
                             let amount = await promptManager.createPrompt(
-                                'Destroy Item', 
-                                "Introdu in caseta de mai jos cantitatea pe care doresti sa o distrugi, apoi apasa pe butonul de confirmare."
+                                inventoryMenu.Lang["destroy_item"], 
+                                inventoryMenu.Lang["destroy_item_desc"]
                             );
 
                             if (!amount) return;
@@ -470,7 +474,7 @@ const inventoryMenu = new Vue({
                 this.selectedItem = await sendPost("inventory:getItemData", [actData]);
         
                 if (this.selectedItem.desc == "" || this.selectedItem.desc == null) {
-                    this.selectedItem.desc = "This item doesn't have a description";
+                    this.selectedItem.desc = inventoryMenu.Lang["no_description"];
                 }
 
                 this.inInfoMenu = true;
@@ -480,8 +484,8 @@ const inventoryMenu = new Vue({
 
         async giveItem(item){
             let amount = await promptManager.createPrompt(
-                'Give Item', 
-                "Introdu in caseta de mai jos cantitatea pe care doresti sa o dai, apoi apasa pe butonul de confirmare."
+                inventoryMenu.Lang["give_item"], 
+                inventoryMenu.Lang["give_item_desc"]
             );
 
             if (!amount) return;

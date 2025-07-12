@@ -11,6 +11,8 @@ RegisterServerEvent('r01:inventory:destroyItem')
 RegisterServerEvent('r01:inventory:useItem')
 RegisterServerEvent('r01:inventory:giveItem')
 
+RegisterServerEvent('r01:inventory:tryReload')
+
 local fastSlots = setmetatable({}, {__index = function(self, key) self[key] = {} return {} end})
 local Inventory = {itemsData = {}}; GlobalState['r01:inventoryItems'] = Inventory.itemsData
 local _rName = GetCurrentResourceName()
@@ -59,7 +61,7 @@ local getSlotByItem <const> = function(items, item)
     local theSlot = ""
 
     for k, v in pairs(items) do
-        if v.item == item then
+        if v.item:lower() == item:lower() then
             theSlot = k
             break
         end
@@ -239,7 +241,7 @@ Inventory.getItemAmount = function(inventory, item)
     local whereToFind = inventoryId:find('drop-') and Drops or serverData
 
     local theSlot = getSlotByItem(whereToFind[inventoryId], item)
-    
+
     if theSlot ~= "" and whereToFind[inventoryId][theSlot].amount then
         return whereToFind[inventoryId][theSlot].amount
     end
@@ -424,6 +426,11 @@ local useItem <const> = function(item)
 
     if not serverData[inventoryId][userSlot] then return end
     
+    if item:upper():find("WEAPON_") then
+        TriggerClientEvent("r01:client:equipWeapon", source, item:upper())
+        return
+    end
+
     if not Inventory.itemsData[item]?.func then return end
 
     Inventory.itemsData[item].func(src, userSlot, serverData[inventoryId][userSlot])
@@ -458,18 +465,55 @@ local setFastSlot <const> = function(slotId, item)
     fastSlots[inventoryId][slotId] = item
 end; AddEventHandler('r01:inventory:setFastSlot', setFastSlot)
 
+local tryReload <const> = function(weapon, needToAdd)
+    local src = source
+    local ammoItem = Config.waponsList[weapon:upper()][4]
+    local ammoCount = Inventory.getItemAmount(src, ammoItem)
+    local weaponLabel = Inventory.itemsData[weapon:lower()] and Inventory.itemsData[weapon:lower()].label or weapon:upper()
+    local toAdd = 0
+
+    if not ammoItem or not ammoCount or ammoCount <= 0 then
+        TriggerClientEvent('r01:client:showNotification', src, getLang("no_ammo_for").." "..weapon)
+        return
+    end
+
+    if ammoCount >= needToAdd then
+        toAdd = needToAdd
+    else
+        toAdd = ammoCount
+    end
+
+    Inventory.RemoveItem(src, ammoItem, toAdd)
+    TriggerClientEvent('r01:client:doReload', src, toAdd)
+
+end; AddEventHandler('r01:inventory:tryReload', tryReload)
+
 --======================================================================================--
 --======================================= OTHERS =======================================--
 --======================================= OTHERS =======================================--
 --======================================= OTHERS =======================================--
 --======================================= OTHERS =======================================--
 --======================================================================================--
+
+for weapon, data in pairs(Config.waponsList) do
+    local label = data[1]
+    local weight = data[2]
+    local desc = data[3]
+    local ammoItem = data[4]
+
+    Inventory.DefItem(weapon, label, desc, weight)
+
+    if ammoItem and type(ammoItem) == "string" then
+        Inventory.DefItem(ammoItem, label .. " Ammo", "Ammo for " .. label, 0.1)
+    end
+end
+
 
 if Config.dataBaseType == 'mongodb' then
     AddEventHandler('onDatabaseConnect', function()
         isDBconnected = true
 
-        print(('^2[%s]^7: Database connection established!'):format(_rName))
+        print(('^2[%s]^7: '..getLang('db_connected').."!"):format(_rName))
     end)
 
     AddEventHandler('onResourceStart', function(rName)
@@ -478,14 +522,14 @@ if Config.dataBaseType == 'mongodb' then
         if exports[Config.dataBaseName]:isConnected() then
             isDBconnected = true
         else
-            print(('^1[%s]^7: Database connection failed!'):format(_rName))
+        print(('^2[%s]^7: '..getLang('db_not_connected').."!"):format(_rName))
         end
     end)
 else
     MySQL.ready(function()
         isDBconnected = true
 
-        print(('^2[%s]^7: Database connection established!'):format(_rName))
+        print(('^2[%s]^7: '..getLang('db_connected').."!"):format(_rName))
         MySQL.query('CREATE TABLE IF NOT EXISTS inventories (inventoryId VARCHAR(255) PRIMARY KEY, inventoryData TEXT)')
     end)
 end
