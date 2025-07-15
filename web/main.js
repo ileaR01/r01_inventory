@@ -15,7 +15,7 @@ function handleResize() {
 }; handleResize(); window.addEventListener("resize", handleResize)
 
 function handleImageError(dom) {
-    dom.setAttribute("src", "./img/error.svg");
+    dom.setAttribute("src", "./error.svg");
 }
 
 window.addEventListener("message",function(evt){
