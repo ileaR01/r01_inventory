@@ -1,26 +1,143 @@
-# 📦 FiveM Standalone Inventory System
+# 🎒 FiveM Inventory System
 
-A modern, flexible **inventory system** for FiveM that works **standalone**, supports **dynamic item slots**, and is compatible with both **MySQL** and **MongoDB**.
-
----
-
-## 🌟 Features
-
-- ✅ **Standalone**: No dependency on ESX, QBCore, or other frameworks.
-- 🔁 **Dual database support**: Works with both MySQL and MongoDB.
-- 📦 **Dynamic item slots**: Customizable slot limits per inventory.
-- 🎯 **Fast slots**: Assign and use quick-access slots with hotkeys.
-- 🧠 **Smart UI**: Drag & drop interface via NUI (requires frontend).
-- 📤 **Ground drops**: Support for dropping and picking up items in the world.
-- 🔒 **Server-side validation**: Protection against cheating or spoofing.
+A modular, lightweight inventory system built for performance and flexibility in **FiveM**. Supports **MongoDB** & **MySQL**, localized languages, and customizable weapon & vehicle logic.
 
 ---
 
-## 🔧 Installation
+![Preview](https://cdn.discordapp.com/attachments/1233752618153545869/1307748689392963686/image.png?ex=687685e0&is=68753460&hm=4aff4c1b48417ed44801de60e9eec54023206e89ceb9db41465602e6d939c678&)
+<!-- Replace the image above with a real screenshot or GIF of your inventory UI -->
 
-### 1. Download and place the resource
-Put the folder (e.g., `r01_inventory`) in your `resources/` directory.
+## 📌 Features
 
-### 2. Add it to `server.cfg`
-```cfg
-ensure r01_inventory
+- 🔑 Easy-to-bind inventory key (`I` by default)
+- ⚡ Fast Slot preview system (`TAB`)
+- 🗃️ Supports both **MongoDB** and **MySQL**
+- 🌍 Multi-language support (English & Romanian by default)
+- 🔫 Custom weapon metadata (ammo types, weights, descriptions)
+- 🚘 Intelligent trunk logic (rear-engine vehicle detection)
+- 📦 Config-based, easy to extend and customize
+
+---
+
+## 🔧 Configuration
+
+### Keybinds
+
+```lua
+Config.openKeyBind = 'I'
+Config.showFastSlotsKeyBind = 'TAB'
+```
+
+### Database
+
+```lua
+Config.dataBaseType = 'mongodb' -- or 'mysql'
+Config.dataBaseName = 'mongodb' -- Only used for MongoDB
+```
+
+### Language
+
+```lua
+Config.selectedLanguage = 'en' -- Options: 'en', 'ro'
+```
+
+Language strings are stored in `Config.Lang`. Example:
+
+```lua
+Config.Lang = {
+  ['en'] = {
+    ["acces_inventory"] = "Access inventory",
+    ...
+  },
+  ['ro'] = {
+    ["acces_inventory"] = "Acceseaza inventarul",
+    ...
+  }
+}
+```
+
+---
+
+## 🔫 Weapon List
+
+Defined in `Config.waponsList`, each weapon entry includes:
+
+```lua
+[weaponHash] = {Label, Weight, Description, AmmoType}
+```
+
+Example:
+
+```lua
+['WEAPON_PISTOL'] = {'Pistol', 1.5, 'Standard semi-automatic handgun.', 'AMMO_PISTOL'}
+['WEAPON_KNIFE'] = {'Knife', 1.0, 'A sharp melee weapon.', false}
+```
+
+---
+
+## 🚗 Rear-Engine Vehicle Support
+
+Some vehicles (like supercars) have their engine in the back.
+
+```lua
+Config.backEngines = {
+  [`t20`] = true,
+  [`zentorno`] = true,
+  ...
+}
+```
+
+This helps with proper trunk access or engine inspection logic.
+
+---
+
+## 🌍 Localization Helper
+
+Get translated text dynamically using:
+
+```lua
+local msg = getLang("reload_weapon")
+```
+
+Automatically falls back to English if the key is missing.
+
+---
+
+## 📸 Preview
+
+> 💡 Add a screenshot or GIF of your inventory UI here!
+
+---
+
+## 📂 Recommended Structure
+
+```
+inventory/
+├── client/
+├── server/
+├── config.lua
+├── fxmanifest.lua
+└── README.md
+```
+
+---
+
+## 🧪 Requirements
+
+* `oxmysql` or a MongoDB resource
+* A basic NUI setup (if UI interaction is needed)
+
+---
+
+## 📜 License
+
+This project is licensed under the **MIT License**.
+Free to use, modify, and redistribute with credit.
+
+---
+
+## 🙌 Credits
+
+Inspired by clean resource design standards like KillLogs.
+Contributions and suggestions welcome!
+
