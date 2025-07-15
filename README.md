@@ -103,41 +103,6 @@ Automatically falls back to English if the key is missing.
 
 ---
 
-## 📸 Preview
-
-> 💡 Add a screenshot or GIF of your inventory UI here!
-
----
-
-## 📂 Recommended Structure
-
-```
-inventory/
-├── client/
-├── server/
-├── config.lua
-├── fxmanifest.lua
-└── README.md
-```
-
----
-
 ## 🧪 Requirements
 
-* `oxmysql` or a MongoDB resource
-* A basic NUI setup (if UI interaction is needed)
-
----
-
-## 📜 License
-
-This project is licensed under the **MIT License**.
-Free to use, modify, and redistribute with credit.
-
----
-
-## 🙌 Credits
-
-Inspired by clean resource design standards like KillLogs.
-Contributions and suggestions welcome!
-
+* `oxmysql`, `mysql-async` or a `MongoDB` resource
