@@ -91,18 +91,6 @@ This helps with proper trunk access or engine inspection logic.
 
 ---
 
-## 🌍 Localization Helper
-
-Get translated text dynamically using:
-
-```lua
-local msg = getLang("reload_weapon")
-```
-
-Automatically falls back to English if the key is missing.
-
----
-
 ## 🧪 Requirements
 
 * `oxmysql`, `mysql-async` or a `MongoDB` resource
