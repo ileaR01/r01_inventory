@@ -15,7 +15,7 @@ RegisterServerEvent('r01:inventory:tryReload')
 
 local fastSlots = setmetatable({}, {__index = function(self, key) self[key] = {} return {} end})
 local Inventory = {itemsData = {}}; GlobalState['r01:inventoryItems'] = Inventory.itemsData
-local _rName = GetCurrentResourceName()
+local _rName = GetCurrentResourceName(); GlobalState['r01:inventory:_rName'] = _rName
 local Drops = {}
 local finishSync = false
 local isDBconnected = false
@@ -576,5 +576,13 @@ for k, v in pairs(Inventory) do
 end
 
 exports('getFunctions', function()
-    return Inventory
+    return setmetatable({}, {
+        __index = function(self, key)
+            self[key] = function(...)
+                return exports[GlobalState['r01:inventory:_rName']][key](nil, ...)
+            end
+            
+            return self[key]
+        end
+    })
 end)
