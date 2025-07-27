@@ -104,6 +104,18 @@ local countTable <const> = function(tbl)
     return t
 end
 
+local hasItemOnFastSlot <const> = function(inventoryId, item)
+    if not fastSlots[inventoryId] then return false end
+
+    for slotId, v in pairs(fastSlots[inventoryId]) do
+        if v:lower() == item:lower() then
+            return slotId
+        end
+    end
+
+    return -1
+end
+
 --=================================================================================================--
 --==================================== Inventory base function ====================================--
 --==================================== Inventory base function ====================================--
@@ -189,10 +201,14 @@ Inventory.AddItem = function(src, item, amount)
         }
     end
 
+    local newWeight = Inventory.getWeight(inventoryId)
+
+    TriggerClientEvent('r01:client:updateWeight', src, 'self', newWeight)
     TriggerClientEvent('r01:inventory:sendNuiMessage', src, {
         event = 'addInventoryItem',
         data = {theSlot, serverData[inventoryId][theSlot]}
     })
+
 
     return true
 end
@@ -209,12 +225,18 @@ Inventory.RemoveItem = function(src, item, amount)
         
         if item:upper():find("WEAPON_") then
             if ammoCache[src] and ammoCache[src][item:upper()] and ammoCache[src][item:upper()] > 0 then
-                local ammoItem = Config.weaponsList[item:upper()][4]                
-                TriggerClientEvent("r01:client:useWeapon", src, item:upper(), 0)
+                if not Config.throwableWeapons[item:upper()] then
+                    TriggerClientEvent("r01:client:useWeapon", src, item:upper(), 0)
+                end
             end
         end
 
         if serverData[inventoryId][theSlot].amount == amount then
+            local fSlot = hasItemOnFastSlot(inventoryId, item)
+            if fSlot ~= -1 then
+                TriggerClientEvent('r01:client:removeFastSlot', src, fSlot)
+            end
+
             serverData[inventoryId][theSlot] = nil
         else
             serverData[inventoryId][theSlot].amount -= amount
@@ -224,6 +246,9 @@ Inventory.RemoveItem = function(src, item, amount)
             event = 'removeInventoryItem',
             data = {theSlot, amount}
         })
+
+        local newWeight = Inventory.getWeight(inventoryId)
+        TriggerClientEvent('r01:client:updateWeight', src, 'self', newWeight)
 
         return true
     end
@@ -343,7 +368,8 @@ local throwItem <const> = function(jsSlotId, secondId, jsSecondSlot, amount)
     local inventoryId = GetPlayerIdentifierByType(src, 'license2')
     
     local whereModify = secondId:find('drop-') and Drops or serverData
-
+    local isNewDrop = false
+    
     if secondId == "drop-new" then 
         secondId = createDropId()
         whereModify[secondId] = {}
@@ -363,7 +389,6 @@ local throwItem <const> = function(jsSlotId, secondId, jsSecondSlot, amount)
     local item = serverData[inventoryId][jsSlotId].item
     if item:upper():find("WEAPON_") then
         if ammoCache[src] and ammoCache[src][item:upper()] and ammoCache[src][item:upper()] > 0 then
-            local ammoItem = Config.weaponsList[item:upper()][4]                
             TriggerClientEvent("r01:client:useWeapon", src, item:upper(), 0)
         end
     end
@@ -380,10 +405,21 @@ local throwItem <const> = function(jsSlotId, secondId, jsSecondSlot, amount)
     end
     
     if amount == serverData[inventoryId][jsSlotId].amount then
+        local fSlot = hasItemOnFastSlot(inventoryId, item)
+        if fSlot ~= -1 then
+            TriggerClientEvent('r01:client:removeFastSlot', src, fSlot)
+        end
+
         serverData[inventoryId][jsSlotId] = nil
     else
         serverData[inventoryId][jsSlotId].amount = serverData[inventoryId][jsSlotId].amount - amount
     end
+
+    local myNewWeight = Inventory.getWeight(inventoryId)
+    local secondNewWeight = Inventory.getWeight(secondId)
+
+    TriggerClientEvent('r01:client:updateWeight', src, 'self', myNewWeight)
+    TriggerClientEvent('r01:client:updateWeight', src, secondId, secondNewWeight)
 end; AddEventHandler('r01:inventory:throwItem', throwItem)
 
 local takeItem <const> = function(jsSecondSlot, secondId, jsUserSlot, amount)
@@ -425,6 +461,11 @@ local takeItem <const> = function(jsSecondSlot, secondId, jsUserSlot, amount)
     else
         whereModify[secondId][jsSecondSlot].amount = whereModify[secondId][jsSecondSlot].amount - amount
     end
+
+    local myNewWeight = Inventory.getWeight(inventoryId)
+    local secondNewWeight = Inventory.getWeight(secondId)
+    TriggerClientEvent('r01:client:updateWeight', src, 'self', myNewWeight)
+    TriggerClientEvent('r01:client:updateWeight', src, secondId, secondNewWeight)
 end; AddEventHandler('r01:inventory:takeItem', takeItem)
 
 local destroyItem <const> = function(jsUserSlot, amount)
@@ -443,6 +484,9 @@ local destroyItem <const> = function(jsUserSlot, amount)
     else
         serverData[inventoryId][jsUserSlot].amount -= amount
     end
+
+    local newWeight = Inventory.getWeight(inventoryId)
+    TriggerClientEvent('r01:client:updateWeight', src, 'self', newWeight)
 end; AddEventHandler('r01:inventory:destroyItem', destroyItem)
 
 local useItem <const> = function(item)
@@ -458,19 +502,30 @@ local useItem <const> = function(item)
     
     if item:upper():find("WEAPON_") then
         local ammoItem = Config.weaponsList[item:upper()][4]
-        local ammoCount = Inventory.getItemAmount(src, ammoItem)
-        
+
         if ammoCache[src] and ammoCache[src][item:upper()] then goto doEvent end
 
-        ammoCount = ammoCount <= 250 and ammoCount or 250
+        if ammoItem then
+            local ammoCount = Inventory.getItemAmount(src, ammoItem)
+            
+    
+            ammoCount = ammoCount <= 250 and ammoCount or 250
+    
+            ammoCache[src] = ammoCache[src] or {}
+            ammoCache[src][item:upper()] = ammoCount
+    
+            Inventory.RemoveItem(src, ammoItem, ammoCount)
+        else
+            ammoCache[src] = ammoCache[src] or {}
+            ammoCache[src][item:upper()] = 1
 
-        ammoCache[src] = ammoCache[src] or {}
-        ammoCache[src][item:upper()] = ammoCount
-
-        Inventory.RemoveItem(src, ammoItem, ammoCount)
+            if Config.throwableWeapons[item:upper()] then
+                Inventory.RemoveItem(src, item, 1)
+            end
+        end
 
         ::doEvent::
-        TriggerClientEvent("r01:client:useWeapon", source, item:upper(), ammoCount)
+        TriggerClientEvent("r01:client:useWeapon", source, item:upper(), ammoCache[src][item:upper()])
         return
     end
 
@@ -490,6 +545,7 @@ local giveItem <const> = function(userSlot, amount)
 
     
 
+    
 end; AddEventHandler('r01:inventory:giveItem', giveItem)
 
 local setFastSlot <const> = function(slotId, item)
@@ -497,11 +553,9 @@ local setFastSlot <const> = function(slotId, item)
 
     local inventoryId = GetPlayerIdentifierByType(src, 'license2')
     
-    local userSlot = getSlotByItem(serverData[inventoryId], item)
-    
     if not item then goto finish end
 
-    if not serverData[inventoryId][userSlot] then return end
+    if not serverData[inventoryId][getSlotByItem(serverData[inventoryId], item)] then return end
 
     ::finish::
 
@@ -512,7 +566,6 @@ local giveAmmoBack <const> = function(weapon, needToGive)
     local src = source
 
     if not weapon or not needToGive then return end
-
     weapon = weapon:upper()
 
     if not ammoCache[src] or not ammoCache[src][weapon] then return end
@@ -522,6 +575,10 @@ local giveAmmoBack <const> = function(weapon, needToGive)
     ammoCache[src][weapon] = nil
 
     local ammoItem = Config.weaponsList[weapon][4]
+
+    if Config.throwableWeapons[weapon] then
+        ammoItem = weapon 
+    end
 
     if not ammoItem then return end
     

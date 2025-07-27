@@ -92,20 +92,22 @@ Config.weaponsList = {
     ['WEAPON_SNIPERRIFLE'] = {'Sniper Rifle', 6.0, 'Precision long-range rifle.', 'AMMO_SNIPER'},
     ['WEAPON_HEAVYSNIPER'] = {'Heavy Sniper', 7.0, 'High-caliber sniper rifle.', 'AMMO_SNIPER'},
 
-    ['WEAPON_GRENADE'] = {'Grenade', 0.5, 'Throwable explosive.', false},
-    ['WEAPON_MOLOTOV'] = {'Molotov Cocktail', 0.6, 'Incendiary weapon.', false},
-
     ['WEAPON_STUNGUN'] = {'Taser', 1.0, 'Non-lethal electroshock weapon.', false},
     ['WEAPON_FLASHLIGHT'] = {'Flashlight', 0.3, 'Used for lighting.', false},
+
+    ["WEAPON_MOLOTOV"] = {"Molotov", 0.6, "A simple molotov", false},
+    ["WEAPON_BZGAS"] = {"BZGAS", 0.5, "A simple bzgas", false},
+    ["WEAPON_GRENADE"] = {"Grenade", 0.5, "A simple grenade", false},
+    ["WEAPON_SMOKEGRENADE"] = {"Smoke grenade", 0.4, "A simple smoke grenade", false},
+    ["WEAPON_STICKYBOMB"] = {"Stickybomb", 0.5, "A simple stickybomb", false},
 }
 
-Config.throwableWeapons = {
+Config.throwableWeapons = { -- only grenades
     ['WEAPON_MOLOTOV'] = true,
     ['WEAPON_BZGAS'] = true,
     ["WEAPON_GRENADE"] = true,
     ["WEAPON_SMOKEGRENADE"] = true,
     ["WEAPON_STICKYBOMB"] = true,
-
 }
 
 Config.backEngines = { -- list of vehicles that has engine in the back (not all, you can add more)

@@ -29,9 +29,27 @@ window.addEventListener("message",function(evt){
         case 'addInventoryItem':
             inventoryMenu.addItem(data.data[0], data.data[1]);
         break;
+
+        case 'updateWeight':
+            if (data.data.inventoryId == 'self') {
+                inventoryMenu.myWeight = data.data.weight;
+            } else {
+                inventoryMenu.secondData.weight = data.data.weight;
+            }
+        break;
         
         case 'removeInventoryItem':
             inventoryMenu.removeItem(data.data[0], data.data[1]);
+        break;
+
+        case 'removeFastSlot':
+            const fastSlot = data.data;
+            if (fastSlot >= 0 && fastSlot <= 6) {
+                $("#fastSlot-" + fastSlot).html(`<p>${Number(fastSlot) + 1}</p>`);
+                $("#fastSlotPreview-" + fastSlot).empty();
+                inventoryMenu.fastSlots[fastSlot] = false;
+                sendPost("inventory:setFastSlot", [String(fastSlot), false]);                
+            }
         break;
 
         case 'showFastSlotsPreview':

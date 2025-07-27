@@ -7,6 +7,8 @@ RegisterNetEvent('r01:client:removeDrop')
 RegisterNetEvent("r01:client:useWeapon")
 RegisterNetEvent("r01:client:doReload")
 
+RegisterNetEvent("r01:client:updateWeight")
+RegisterNetEvent("r01:client:removeFastSlot")
 
 AddEventHandler("r01:inventory:sendNuiMessage", function(...)
     SendNUIMessage(...)
@@ -82,6 +84,15 @@ local loadAnimDict = function(dict)
     end
 end
 
+local updateWeight = function(inventoryId, weight)
+    SendNUIMessage({
+        event = 'updateWeight',
+        data = {
+            inventoryId = inventoryId,
+            weight = ("%s/%skg"):format(weight, 30),
+        }
+    })
+end; AddEventHandler("r01:client:updateWeight", updateWeight)
 
 RegisterCommand('r01ScriptsOpenInventory', function()
     local second = "drop-new"
@@ -154,6 +165,14 @@ RegisterNuiCallback("inventory:setFastSlot", function(data, cb)
     TriggerServerEvent("r01:inventory:setFastSlot", data[1], data[2])
     cb('ok')
 end)
+
+local removeFastSlot = function(slot)
+    fastSlots[slot] = false
+    SendNUIMessage({
+        event = 'removeFastSlot',
+        data = slot
+    })
+end; AddEventHandler("r01:client:removeFastSlot", removeFastSlot)
 
 RegisterNuiCallback("inventory:closeInventory", function(data, cb)
     local ped = PlayerPedId()
@@ -246,7 +265,7 @@ AddEventHandler("r01:client:useWeapon", function(weaponName, ammoCount)
 
         RemoveWeaponFromPed(ped, weaponHash)
         ClearPedTasksImmediately(ped)
-        
+
         TriggerServerEvent("r01:inventory:giveBackAmmo", equippedWeapon, playerAmmo)
 
         equippedWeapon = nil
@@ -272,6 +291,12 @@ Citizen.CreateThread(function()
 
             if currentAmmo < 1 then
                 SetCurrentPedWeapon(ped, weaponHash, true)
+
+                if Config.throwableWeapons[equippedWeapon] then
+                    RemoveAllPedWeapons(ped)
+                    TriggerServerEvent("r01:inventory:giveBackAmmo", equippedWeapon, 0)
+                    equippedWeapon = nil
+                end
             end
 
             Wait(100)
