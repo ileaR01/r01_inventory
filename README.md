@@ -60,7 +60,7 @@ Config.Lang = {
 
 ## 🔫 Weapon List
 
-Defined in `Config.waponsList`, each weapon entry includes:
+Defined in `Config.weaponsList`, each weapon entry includes:
 
 ```lua
 [weaponHash] = {Label, Weight, Description, AmmoType}

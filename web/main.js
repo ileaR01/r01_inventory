@@ -37,10 +37,6 @@ window.addEventListener("message",function(evt){
         case 'showFastSlotsPreview':
             fastSlotsPreview.showFastSlotsPreview(data.data);
         break;
-
-        case 'setLanguage':
-            inventoryMenu.Lang = data.data;
-        break;
     }
 });
 
@@ -65,7 +61,7 @@ const promptManager = new Vue({
                 $(".prompt-layout > .prompt-menu > .wrapper > input").focus();
                 
                 this.title = title || 'Prompt Menu';
-                this.description = description || 'Introdu raspunsul dorit in caseta de mai jos si apoi apasa pe butonul pentru confirmare.';
+                this.description = description || 'Please enter a response:';
 
                 if (response)
                     this.response = response;
@@ -135,11 +131,13 @@ const inventoryMenu = new Vue({
         Lang: {}
     },
 
-    mounted() {
+    async mounted() {
         window.addEventListener("keydown", this.onKey);
+        this.Lang = await sendPost("inventory:tryGetLang", []);
     },
 
     methods: {
+
         closeItemInfo() {
             if (!this.inInfoMenu) return;
 

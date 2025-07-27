@@ -1,14 +1,23 @@
 RegisterNetEvent("r01:inventory:sendNuiMessage")
+RegisterNetEvent("r01:client:showNotification")
 
 RegisterNetEvent('r01:client:createDrop')
 RegisterNetEvent('r01:client:removeDrop')
 
-RegisterNetEvent("r01:client:equipWeapon")
+RegisterNetEvent("r01:client:useWeapon")
 RegisterNetEvent("r01:client:doReload")
-RegisterNetEvent("r01:client:removeWeapon")
+
 
 AddEventHandler("r01:inventory:sendNuiMessage", function(...)
     SendNUIMessage(...)
+end)
+
+AddEventHandler("r01:client:showNotification", function(message, type)
+    if type == 'error' then
+        print(('^1[%s]^7: %s'):format(GetCurrentResourceName(), message))
+    else
+        print(('^2[%s]^7: %s'):format(GetCurrentResourceName(), message))
+    end
 end)
 
 RegisterNuiCallback('setFocus', function(data, cb)
@@ -17,8 +26,8 @@ RegisterNuiCallback('setFocus', function(data, cb)
     cb('ok')
 end)
 
-Citizen.CreateThread(function()
-    SendNUIMessage({event = 'setLanguage', lang = Config.Lang[Config.selectedLanguage] or Config.Lang['en']})
+RegisterNuiCallback('inventory:tryGetLang', function(data, cb)
+    cb(Config.Lang[Config.selectedLanguage] or Config.Lang['en'])
 end)
 
 local equippedWeapon
@@ -232,57 +241,47 @@ end)
 
 RegisterKeyMapping('r01ScriptsShowFastSlots', getLang('show_fast_slots'), 'keyboard', Config.showFastSlotsKeyBind)
 
-function GetWeaponClipInfo(weapon)
+-- weapon handling
+AddEventHandler("r01:client:useWeapon", function(weaponName, ammoCount)
     local ped = PlayerPedId()
-    local weaponHash = GetHashKey(weapon)
 
-    if not HasPedGotWeapon(ped, weaponHash, false) then
-        return 0, 0
+    if equippedWeapon then
+        local weaponHash = GetHashKey(equippedWeapon)
+        local playerAmmo = GetAmmoInPedWeapon(ped, weaponHash)
+
+        RemoveWeaponFromPed(ped, weaponHash)
+        ClearPedTasksImmediately(ped)
+        
+        TriggerServerEvent("r01:inventory:giveBackAmmo", equippedWeapon, playerAmmo)
+
+        equippedWeapon = nil
+        return
     end
 
-    local currentAmmo = GetAmmoInPedWeapon(ped, weaponHash)
-    local maxClip = GetMaxAmmoInClip(ped, weaponHash, true)
+    local weaponHash = GetHashKey(weaponName)
 
-    return maxClip, currentAmmo
-end
-
--- weapon handling
-AddEventHandler("r01:client:equipWeapon", function(weaponName)
-    local ped = PlayerPedId()
-    GiveWeaponToPed(ped, GetHashKey(weaponName), 0, false, true)
+    RemoveAllPedWeapons(ped)
+    GiveWeaponToPed(ped, weaponHash, ammoCount or 0, false, true)
+    SetPedAmmo(ped, weaponHash, ammoCount or 0)
+    ClearPedTasksImmediately(ped)
 
     equippedWeapon = weaponName
 end)
 
-RegisterCommand("r01ScriptsReloadWeapon", function()
-    if not equippedWeapon or equippedWeapon == "WEAPON_UNARMED" or not Config.waponsList[equippedWeapon][4] then
-        return
-    end
+Citizen.CreateThread(function()
+    while true do
+        while equippedWeapon do
+            local ped = PlayerPedId()
+            local weaponHash = GetHashKey(equippedWeapon)
+            local currentAmmo = GetAmmoInPedWeapon(ped, weaponHash)
 
-    local maxClip, currentClip = GetWeaponClipInfo(equippedWeapon)
+            if currentAmmo < 1 then
+                SetCurrentPedWeapon(ped, weaponHash, true)
+            end
 
-    if currentClip >= maxClip then return end
+            Wait(100)
+        end
 
-    TriggerServerEvent("r01:inventory:tryReload", equippedWeapon, maxClip - currentClip)
-end)
-
-RegisterKeyMapping('r01ScriptsReloadWeapon', getLang('reload_weapon'), 'keyboard', 'R')
-
-AddEventHandler("r01:client:doReload", function(ammoAmount)
-    local ped = PlayerPedId()
-    local weaponHash = GetHashKey(equippedWeapon)
-    
-    if HasPedGotWeapon(ped, weaponHash, false) then
-        AddAmmoToPed(ped, weaponHash, ammoAmount)
-    end
-end)
-
-AddEventHandler("r01:client:removeWeapon", function(weaponName)
-    local ped = PlayerPedId()
-    local weaponHash = GetHashKey(weaponName)
-
-    if HasPedGotWeapon(ped, weaponHash, false) then
-        RemoveWeaponFromPed(ped, weaponHash)
-        equippedWeapon = nil
+        Wait(1500)
     end
 end)

@@ -10,13 +10,13 @@ RegisterServerEvent('r01:inventory:destroyItem')
 
 RegisterServerEvent('r01:inventory:useItem')
 RegisterServerEvent('r01:inventory:giveItem')
-
-RegisterServerEvent('r01:inventory:tryReload')
+RegisterServerEvent('r01:inventory:giveBackAmmo')
 
 local fastSlots = setmetatable({}, {__index = function(self, key) self[key] = {} return {} end})
 local Inventory = {itemsData = {}}; GlobalState['r01:inventoryItems'] = Inventory.itemsData
 local _rName = GetCurrentResourceName(); GlobalState['r01:inventory:_rName'] = _rName
 local Drops = {}
+local ammoCache = {}
 local finishSync = false
 local isDBconnected = false
 local serverData = setmetatable({}, {
@@ -111,7 +111,7 @@ end
 --==================================== Inventory base function ====================================--
 --=================================================================================================--
 
----@param src number | user source
+---@param src number
 ---@param secondId string
 Inventory.openInventory = function(src, secondId)
     local inventoryId = GetPlayerIdentifierByType(src, 'license2')
@@ -143,6 +143,7 @@ Inventory.openInventory = function(src, secondId)
 end
 
 ---@param inventory number / string
+---@return number
 Inventory.getWeight = function(inventory)
     local inventoryId = inventory
     local weight = 0
@@ -163,7 +164,15 @@ end
 ---@param src number
 ---@param item string
 ---@param amount number
+---@return boolean
 Inventory.AddItem = function(src, item, amount)
+    
+    if not src or not item or not amount then return false end
+
+    if type(amount) ~= "number" or amount <= 0 then return false end
+
+    local item = item:lower()
+
     if not Inventory.itemsData[item] then return end
     
     local inventoryId = GetPlayerIdentifierByType(src, 'license2')
@@ -191,7 +200,7 @@ end
 ---@param src number
 ---@param item string
 ---@param amount number
----@return true/false
+---@return boolean
 Inventory.RemoveItem = function(src, item, amount)
     local inventoryId = GetPlayerIdentifierByType(src, 'license2')
     local theSlot = getSlotByItem(serverData[inventoryId], item)
@@ -215,11 +224,13 @@ Inventory.RemoveItem = function(src, item, amount)
     return false
 end
 
+
 ---@param item string
 ---@param label string
 ---@param desc string
 ---@param weight number
----@param func fun(source, itemSlot, itemData)
+---@param func function
+---@return table
 Inventory.DefItem = function(item, label, desc, weight, func)
     Inventory.itemsData[item:lower()] = {
         label = label,
@@ -229,10 +240,13 @@ Inventory.DefItem = function(item, label, desc, weight, func)
     }
 
     GlobalState['r01:inventoryItems'] = Inventory.itemsData
+
+    return Inventory.itemsData[item:lower()]
 end
 
 ---@param inventory number / string
 ---@param item string
+---@return number
 Inventory.getItemAmount = function(inventory, item)
     local inventoryId = inventory
 
@@ -249,6 +263,7 @@ Inventory.getItemAmount = function(inventory, item)
     return 0
 end
 
+---@param inventory number / string
 Inventory.saveInventory = function(inventory)
     local inventoryId = inventory
 
@@ -427,7 +442,18 @@ local useItem <const> = function(item)
     if not serverData[inventoryId][userSlot] then return end
     
     if item:upper():find("WEAPON_") then
-        TriggerClientEvent("r01:client:equipWeapon", source, item:upper())
+        local ammoItem = Config.weaponsList[item:upper()][4]
+        local ammoCount = Inventory.getItemAmount(src, ammoItem)
+        
+        if ammoCache[src] and ammoCache[src][item:upper()] then goto doEvent end
+
+        ammoCache[src] = ammoCache[src] or {}
+        ammoCache[src][item:upper()] = ammoCount
+
+        Inventory.RemoveItem(src, ammoItem, ammoCount)
+
+        ::doEvent::
+        TriggerClientEvent("r01:client:useWeapon", source, item:upper(), ammoCount)
         return
     end
 
@@ -465,28 +491,26 @@ local setFastSlot <const> = function(slotId, item)
     fastSlots[inventoryId][slotId] = item
 end; AddEventHandler('r01:inventory:setFastSlot', setFastSlot)
 
-local tryReload <const> = function(weapon, needToAdd)
+local giveAmmoBack <const> = function(weapon, needToGive)
     local src = source
-    local ammoItem = Config.waponsList[weapon:upper()][4]
-    local ammoCount = Inventory.getItemAmount(src, ammoItem)
-    local weaponLabel = Inventory.itemsData[weapon:lower()] and Inventory.itemsData[weapon:lower()].label or weapon:upper()
-    local toAdd = 0
 
-    if not ammoItem or not ammoCount or ammoCount <= 0 then
-        TriggerClientEvent('r01:client:showNotification', src, getLang("no_ammo_for").." "..weapon)
-        return
-    end
+    if not weapon or not needToGive then return end
 
-    if ammoCount >= needToAdd then
-        toAdd = needToAdd
-    else
-        toAdd = ammoCount
-    end
+    weapon = weapon:upper()
 
-    Inventory.RemoveItem(src, ammoItem, toAdd)
-    TriggerClientEvent('r01:client:doReload', src, toAdd)
+    if not ammoCache[src] or not ammoCache[src][weapon] then return end
 
-end; AddEventHandler('r01:inventory:tryReload', tryReload)
+    if needToGive > ammoCache[src][weapon] then return end
+
+    ammoCache[src][weapon] = nil
+
+    local ammoItem = Config.weaponsList[weapon][4]
+
+    if not ammoItem then return end
+    
+    Inventory.AddItem(src, ammoItem, needToGive)
+
+end; AddEventHandler('r01:inventory:giveBackAmmo', giveAmmoBack)
 
 --======================================================================================--
 --======================================= OTHERS =======================================--
@@ -495,7 +519,7 @@ end; AddEventHandler('r01:inventory:tryReload', tryReload)
 --======================================= OTHERS =======================================--
 --======================================================================================--
 
-for weapon, data in pairs(Config.waponsList) do
+for weapon, data in pairs(Config.weaponsList) do
     local label = data[1]
     local weight = data[2]
     local desc = data[3]

@@ -61,7 +61,9 @@ Config.Lang = { -- Language strings
     }
 }
 
-Config.waponsList = {
+Config.weaponsList = {
+    -- [weaponHash] = {Label, Weight, Description, AmmoType}
+
     ['WEAPON_KNIFE'] = {'Knife', 1.0, 'A sharp melee weapon.', false},
     ['WEAPON_BAT'] = {'Baseball Bat', 2.0, 'A blunt melee weapon.', false},
     ['WEAPON_HAMMER'] = {'Hammer', 2.0, 'Tool or close-range weapon.', false},
