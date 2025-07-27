@@ -99,6 +99,15 @@ Config.weaponsList = {
     ['WEAPON_FLASHLIGHT'] = {'Flashlight', 0.3, 'Used for lighting.', false},
 }
 
+Config.throwableWeapons = {
+    ['WEAPON_MOLOTOV'] = true,
+    ['WEAPON_BZGAS'] = true,
+    ["WEAPON_GRENADE"] = true,
+    ["WEAPON_SMOKEGRENADE"] = true,
+    ["WEAPON_STICKYBOMB"] = true,
+
+}
+
 Config.backEngines = { -- list of vehicles that has engine in the back (not all, you can add more)
     [`ninef`] = true,
     [`adder`] = true,
