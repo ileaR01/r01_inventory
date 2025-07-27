@@ -72,7 +72,7 @@ Config.weaponsList = {
     ['WEAPON_PISTOL'] = {'Pistol', 1.5, 'Standard semi-automatic handgun.', 'AMMO_PISTOL'},
     ['WEAPON_COMBATPISTOL'] = {'Combat Pistol', 1.6, 'Tactical law enforcement pistol.', 'AMMO_PISTOL'},
     ['WEAPON_APPISTOL'] = {'AP Pistol', 1.6, 'Fully automatic handgun.', 'AMMO_PISTOL'},
-    ['WEAPON_PISTOL50'] = {'Pistol .50', 1.8, 'High caliber powerful handgun.', 'AMMO_PISTOL50'},
+    ['WEAPON_PISTOL50'] = {'Pistol .50', 1.8, 'High caliber powerful handgun.', 'AMMO_PISTOL'},
 
     ['WEAPON_MICROSMG'] = {'Micro SMG', 2.2, 'Compact submachine gun.', 'AMMO_SMG'},
     ['WEAPON_SMG'] = {'SMG', 2.4, 'Standard submachine gun.', 'AMMO_SMG'},
@@ -139,6 +139,116 @@ Config.backEngines = { -- list of vehicles that has engine in the back (not all,
     [`autarch`] = true,
     [`tyrant`] = true,
     [`coquette4`] = true,
+}
+
+Config.clothesTypes = {
+    ["hat"] = {
+        Emote = {
+            On = {Dict = "missheist_agency2ahelmet", Anim = "take_off_helmet_stand", Move = 51, Dur = 1200},
+            Off = {Dict = "mp_masks@standard_car@ds@", Anim = "put_on_mask", Move = 51, Dur = 600}
+        },
+        type = "prop",
+        id = 0
+    },
+
+    ["watch"] = {
+        Emote = {
+            On = {Dict = "nmt_3_rcm-10", Anim = "cs_nigel_dual-10", Move = 51, Dur = 1200},
+            Off = {Dict = "nmt_3_rcm-10", Anim = "cs_nigel_dual-10", Move = 51, Dur = 1200}
+        },
+        type = "prop",
+        id = 6
+    },
+
+    ["bracelet"] = {
+        Emote = {
+            On = {Dict = "nmt_3_rcm-10", Anim = "cs_nigel_dual-10", Move = 51, Dur = 1200},
+            Off = {Dict = "nmt_3_rcm-10", Anim = "cs_nigel_dual-10", Move = 51, Dur = 1200}
+        },
+        type = "prop",
+        id = 7
+    },
+
+    ["vest"] = {
+        Emote = {Dict = "clothingtie", Anim = "try_tie_negative_a", Move = 51, Dur = 1200},
+        type = "drawable",
+        id = 9,
+
+        male = {0, 0},
+        female = {0, 0}
+    },
+
+    ["shoes"] = {
+        Emote = {Dict = "random@domestic", Anim = "pickup_low", Move = 0, Dur = 1200},
+        type = "drawable",
+        id = 6,
+
+        male = {99, 0},
+        female = {51, 0}
+    },
+
+
+    --==========================================--
+
+    ["mask"] = {
+        Emote = {Dict = "mp_masks@standard_car@ds@", Anim = "put_on_mask", Move = 51, Dur = 800},
+        type = "drawable",
+        id = 1,
+
+        male = {-1, 0},
+        female = {-1, 0}
+    },
+
+    ["glasses"] = {
+		Emote = {
+			On = {Dict = "clothingspecs", Anim = "take_off", Move = 51, Dur = 1400},
+			Off = {Dict = "clothingspecs", Anim = "take_off", Move = 51, Dur = 1400}
+		},
+
+        type = "prop",
+        id = 1
+    },
+
+    ["gloves"] = {
+        Emote = {
+            On = {Dict = "nmt_3_rcm-10", Anim = "cs_nigel_dual-10", Move = 51, Dur = 1200},
+            Off = {Dict = "nmt_3_rcm-10", Anim = "cs_nigel_dual-10", Move = 51, Dur = 1200}
+        },
+
+        type = "drawable",
+        id = 3,
+        
+        male = {0, 0},
+        female = {0, 0}
+    },
+
+    ["shirt"] = {
+        Emote = {Dict = "clothingtie", Anim = "try_tie_negative_a", Move = 51, Dur = 1200},
+        type = "multiple",
+        male = {
+            -- {drawableId, modelId}
+            [11] = {15, 0},
+            [8] = {15, 0},
+            [3] = {15, 0},
+            [10] = {0, 0}
+        },
+        female = {
+            -- {drawableId, modelId}
+            [11] = {15, 0},
+            [8] = {15, 0},
+            [3] = {15, 0},
+            [10] = {0, 0}
+        }
+    },
+
+    ["pants"] = {
+        Emote = {Dict = "re@construction", Anim = "out_of_breath", Move = 51, Dur = 1300},
+        type = "drawable",
+        id = 4,
+
+        male = {102, 0},
+        female = {15, 0}
+    },
 }
 
 _G.getLang = function(key)

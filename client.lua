@@ -155,11 +155,6 @@ RegisterNuiCallback("inventory:setFastSlot", function(data, cb)
     cb('ok')
 end)
 
-RegisterNuiCallback("inventory:useCloth", function(data, cb)
-    ExecuteCommand(data[1])
-    cb('ok')
-end)
-
 RegisterNuiCallback("inventory:closeInventory", function(data, cb)
     local ped = PlayerPedId()
     SetNuiFocus(false, false)
@@ -283,5 +278,96 @@ Citizen.CreateThread(function()
         end
 
         Wait(1500)
+    end
+end)
+
+-- cloth handling
+local savedClothing = {}
+local cooldown = 0
+
+local function playAnim(ped, animData)
+    if not animData or not animData.Dict or not animData.Anim then return end
+    RequestAnimDict(animData.Dict)
+    while not HasAnimDictLoaded(animData.Dict) do
+        Citizen.Wait(10)
+    end
+    TaskPlayAnim(ped, animData.Dict, animData.Anim, 3.0, 3.0, animData.Dur or 1000, 
+        IsPedInAnyVehicle(ped) and 51 or (animData.Move or 0), 0, false, false, false)
+    Citizen.Wait(animData.Dur or 1000)
+end
+
+local function toggleClothing(clothType, skipAnim)
+    if not clothType or not Config.clothesTypes[clothType] then return end
+
+    if not skipAnim and (cooldown > GetGameTimer()) then return end
+    cooldown = GetGameTimer() + 100
+
+    local ped = PlayerPedId()
+    local isMale = (GetEntityModel(ped) ~= GetHashKey("mp_f_freemode_01"))
+    local clothCfg = Config.clothesTypes[clothType]
+
+    if savedClothing[clothType] then
+        if not skipAnim then
+            playAnim(ped, clothCfg.Emote.Off or clothCfg.Emote)
+        end
+
+        if clothCfg.type == "prop" then
+            SetPedPropIndex(ped, clothCfg.id, savedClothing[clothType][1], savedClothing[clothType][2], true)
+        elseif clothCfg.type == "drawable" then
+            SetPedComponentVariation(ped, clothCfg.id, savedClothing[clothType][1], savedClothing[clothType][2])
+        else
+            for compId, compData in pairs(savedClothing[clothType]) do
+                SetPedComponentVariation(ped, compId, compData[1], compData[2])
+            end
+        end
+
+        savedClothing[clothType] = nil
+
+    else
+        if not skipAnim then
+            playAnim(ped, clothCfg.Emote.On or clothCfg.Emote)
+        end
+
+        if clothCfg.type == "prop" then
+            savedClothing[clothType] = {
+                GetPedPropIndex(ped, clothCfg.id),
+                GetPedPropTextureIndex(ped, clothCfg.id)
+            }
+            ClearPedProp(ped, clothCfg.id)
+
+        elseif clothCfg.type == "drawable" then
+            savedClothing[clothType] = {
+                GetPedDrawableVariation(ped, clothCfg.id),
+                GetPedTextureVariation(ped, clothCfg.id)
+            }
+            local data = isMale and clothCfg.male or clothCfg.female
+            SetPedComponentVariation(ped, clothCfg.id, data[1], data[2])
+
+        else
+            savedClothing[clothType] = {}
+            local genderCfg = isMale and clothCfg.male or clothCfg.female
+            for compId, variation in pairs(genderCfg) do
+                savedClothing[clothType][compId] = {
+                    GetPedDrawableVariation(ped, compId),
+                    GetPedTextureVariation(ped, compId)
+                }
+                SetPedComponentVariation(ped, compId, variation[1], variation[2])
+            end
+        end
+    end
+end
+
+RegisterNuiCallback("inventory:useCloth", function(data, cb)
+    toggleClothing(data[1])
+    cb('ok')
+end)
+
+AddEventHandler("onResourceStop", function(resource)
+    if resource ~= GetCurrentResourceName() then return end
+
+    for clothType in pairs(Config.clothesTypes) do
+        if savedClothing[clothType] then
+            toggleClothing(clothType, true)
+        end
     end
 end)

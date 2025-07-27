@@ -207,6 +207,13 @@ Inventory.RemoveItem = function(src, item, amount)
     
     if theSlot ~= "" and serverData[inventoryId][theSlot].amount >= amount then
         
+        if item:upper():find("WEAPON_") then
+            if ammoCache[src] and ammoCache[src][item:upper()] and ammoCache[src][item:upper()] > 0 then
+                local ammoItem = Config.weaponsList[item:upper()][4]                
+                TriggerClientEvent("r01:client:useWeapon", src, item:upper(), 0)
+            end
+        end
+
         if serverData[inventoryId][theSlot].amount == amount then
             serverData[inventoryId][theSlot] = nil
         else
@@ -353,6 +360,14 @@ local throwItem <const> = function(jsSlotId, secondId, jsSecondSlot, amount)
     
     if whereModify[secondId][jsSecondSlot] and whereModify[secondId][jsSecondSlot].item ~= serverData[inventoryId][jsSlotId].item then  return end
     
+    local item = serverData[inventoryId][jsSlotId].item
+    if item:upper():find("WEAPON_") then
+        if ammoCache[src] and ammoCache[src][item:upper()] and ammoCache[src][item:upper()] > 0 then
+            local ammoItem = Config.weaponsList[item:upper()][4]                
+            TriggerClientEvent("r01:client:useWeapon", src, item:upper(), 0)
+        end
+    end
+
     local itemExists = getSlotByItem(whereModify[secondId], serverData[inventoryId][jsSlotId]?.item or "")
     
     if itemExists ~= "" then
@@ -446,6 +461,8 @@ local useItem <const> = function(item)
         local ammoCount = Inventory.getItemAmount(src, ammoItem)
         
         if ammoCache[src] and ammoCache[src][item:upper()] then goto doEvent end
+
+        ammoCount = ammoCount <= 250 and ammoCount or 250
 
         ammoCache[src] = ammoCache[src] or {}
         ammoCache[src][item:upper()] = ammoCount
