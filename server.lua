@@ -37,10 +37,9 @@ local serverData = setmetatable({}, {
             if not finishSync then goto next end
 
             if Config.dataBaseType == 'mongodb' then 
-                exports[Config.dataBaseName]:updateOne{collection = 'inventoryes', query = {inventoryId = key}, update = {
-                    ["$set"] = {
-                        inventoryData = value,
-                    }
+                exports[Config.dataBaseName]:insertOne{collection = 'inventoryes', document = {
+                    inventoryId = key,
+                    inventoryData = value
                 }}
             else
                 MySQL.Sync.execute("INSERT INTO inventories (inventoryId, inventoryData) VALUES (@inventoryId, @inventoryData) ON DUPLICATE KEY UPDATE inventoryData = @inventoryData", {
