@@ -4,7 +4,7 @@ A modular, lightweight inventory system built for performance and flexibility in
 
 ---
 
-![Preview](https://cdn.discordapp.com/attachments/1233752618153545869/1307748689392963686/image.png?ex=687685e0&is=68753460&hm=4aff4c1b48417ed44801de60e9eec54023206e89ceb9db41465602e6d939c678&)
+![Preview](https://i.ibb.co/GfP3znyY/image.png)
 <!-- Replace the image above with a real screenshot or GIF of your inventory UI -->
 
 ## 📌 Features
