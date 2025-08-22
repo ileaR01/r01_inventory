@@ -91,6 +91,72 @@ This helps with proper trunk access or engine inspection logic.
 
 ---
 
+Example for vRP integration:
+
+```lua
+
+local cfgItems = module("cfg/items")
+
+vRP.defInventoryItem = function(idname, name, description, weight, choices)
+  local p = promise:new()
+
+  Citizen.CreateThread(function()
+    p:resolve(exports['r01_inventory']:DefItem(idname, name, description, weight, choices))
+  end)
+
+  return Citizen.Await(p)
+end
+
+vRP.giveInventoryItem = function(uId, item, amount)
+  local src = vRP.getUserSource(uId)
+  return exports['r01_inventory']:AddItem(src, item, amount)
+end
+
+vRP.tryGetInventoryItem = function(uId, item, amount)
+  local src = vRP.getUserSource(uId)
+  return exports['r01_inventory']:RemoveItem(src, item, amount)
+end
+
+vRP.getInventoryMaxWeight = function(myId)
+  return 30
+end
+
+vRP.getInventoryItemAmount = function(myId, item)
+  local src = vRP.getUserSource(myId)
+  return exports['r01_inventory']:getItemAmount(src, item)
+end
+
+vRP.getItemWeight = function(item)
+  local def = GlobalState['r01:inventoryItems'][item:lower()]
+  return def?.weight or 0
+end
+
+vRP.getItemDefinition = function(item)
+  return GlobalState['r01:inventoryItems'][item:lower()]
+end
+
+vRP.getItemDescription = function(item)
+  local def = GlobalState['r01:inventoryItems'][item:lower()]
+  return def?.desc or ""
+end
+
+vRP.getItemName = function(item)
+  local def = GlobalState['r01:inventoryItems'][item:lower()]
+  return def?.label or ""
+end
+
+vRP.openChest = function(src, name)
+  return exports['r01_inventory']:openInventory(src, name)
+end
+
+for k,v in pairs(cfgItems) do
+  vRP.defInventoryItem(k, v[1], v[2], v[3], v[4])
+end
+
+```
+
+---
+
 ## 🧪 Requirements
 
 * `oxmysql`, `mysql-async` or a `MongoDB` resource

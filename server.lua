@@ -496,6 +496,8 @@ local useItem <const> = function(item)
 
     if not item then return end
 
+    local item = item:lower()
+
     local userSlot = getSlotByItem(serverData[inventoryId], item)
 
     if not serverData[inventoryId][userSlot] then return end
@@ -537,9 +539,13 @@ end; AddEventHandler('r01:inventory:useItem', useItem)
 local giveItem <const> = function(item, amount, nearPlayer)
     local src = source
 
+    if not item or not amount then return end
+
     if amount <= 0 then return end
     
     if not nearPlayer or not GetPlayerName(nearPlayer) then return end
+
+    local item = item:lower()
 
     if Inventory.RemoveItem(src, item, amount) then
         Inventory.AddItem(nearPlayer, item, amount)
