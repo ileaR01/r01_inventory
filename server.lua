@@ -534,18 +534,16 @@ local useItem <const> = function(item)
     Inventory.itemsData[item].func(src, userSlot, serverData[inventoryId][userSlot])
 end; AddEventHandler('r01:inventory:useItem', useItem)
 
-local giveItem <const> = function(userSlot, amount)
+local giveItem <const> = function(item, amount, nearPlayer)
     local src = source
 
-    local inventoryId = GetPlayerIdentifierByType(src, 'license2')
-
-    if not serverData[inventoryId][userSlot] then return end
+    if amount <= 0 then return end
     
-    if amount > serverData[inventoryId][userSlot].amount then return end
+    if not nearPlayer or not GetPlayerName(nearPlayer) then return end
 
-    
-
-    
+    if Inventory.RemoveItem(src, item, amount) then
+        Inventory.AddItem(nearPlayer, item, amount)
+    end
 end; AddEventHandler('r01:inventory:giveItem', giveItem)
 
 local setFastSlot <const> = function(slotId, item)

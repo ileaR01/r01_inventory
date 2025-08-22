@@ -32,6 +32,38 @@ RegisterNuiCallback('inventory:tryGetLang', function(data, cb)
     cb(Config.Lang[Config.selectedLanguage] or Config.Lang['en'])
 end)
 
+local function getClosestPlayer(radius)
+    local radius = radius or 5.0
+
+    local players = GetActivePlayers()
+
+    local closestDist = -1
+    local closestPlayer = -1
+
+    local ped = PlayerPedId()
+    local coords = GetEntityCoords(ped)
+
+    for i=1, #players do
+        local target = GetPlayerPed(players[i])
+
+        if target ~= ped then
+            local targetCoords = GetEntityCoords(target)
+            local dist = #(coords - targetCoords)
+
+            if closestDist == -1 or dist < closestDist then
+                closestPlayer = players[i]
+                closestDist = dist
+            end
+        end
+    end
+
+    if closestPlayer ~= -1 and closestDist <= (radius) then
+        return GetPlayerServerId(closestPlayer), closestDist
+    end
+
+    return nil, nil
+end
+
 local equippedWeapon
 local fastSlots = {}
 local Drops = {}
@@ -47,7 +79,9 @@ local uiLink = {
     .destroyItem,
 
     .useItem,
-    .giveItem
+    ['giveItem'] = function()
+        return getClosestPlayer(2.0)
+    end
 }
 
 local GetClosestVehicle = function(coords)
@@ -152,9 +186,15 @@ for i = 1, 5 do
     RegisterKeyMapping('useR01fastItem_'..i, getLang('use_slot')..' '..i, 'keyboard', i)
 end
 
-for k in pairs(uiLink) do
+for k, func in pairs(uiLink) do
     RegisterNuiCallback('inventory:'..k, function(data, cb)
-        TriggerServerEvent('r01:inventory:'..k, table.unpack(data))
+        local cbData = data
+
+        if func and type(func) == 'function' then
+            table.insert(cbData, func())
+        end
+
+        TriggerServerEvent('r01:inventory:'..k, table.unpack(cbData))
 
         cb('ok')
     end)
@@ -264,7 +304,6 @@ AddEventHandler("r01:client:useWeapon", function(weaponName, ammoCount)
         local playerAmmo = GetAmmoInPedWeapon(ped, weaponHash)
 
         RemoveWeaponFromPed(ped, weaponHash)
-        ClearPedTasksImmediately(ped)
 
         TriggerServerEvent("r01:inventory:giveBackAmmo", equippedWeapon, playerAmmo)
 
@@ -277,7 +316,6 @@ AddEventHandler("r01:client:useWeapon", function(weaponName, ammoCount)
     RemoveAllPedWeapons(ped)
     GiveWeaponToPed(ped, weaponHash, ammoCount or 0, false, true)
     SetPedAmmo(ped, weaponHash, ammoCount or 0)
-    ClearPedTasksImmediately(ped)
 
     equippedWeapon = weaponName
 end)

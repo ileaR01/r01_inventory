@@ -47,6 +47,8 @@ window.addEventListener("message",function(evt){
             if (fastSlot >= 0 && fastSlot <= 6) {
                 $("#fastSlot-" + fastSlot).html(`<p>${Number(fastSlot) + 1}</p>`);
                 $("#fastSlotPreview-" + fastSlot).empty();
+                
+                inventoryMenu.blockFastSlots[inventoryMenu.fastSlots[fastSlot]] = false;
                 inventoryMenu.fastSlots[fastSlot] = false;
                 sendPost("inventory:setFastSlot", [String(fastSlot), false]);                
             }
@@ -126,6 +128,7 @@ const inventoryMenu = new Vue({
 
         inInfoMenu: false,
         fastSlots: {},
+        blockFastSlots: {},
         userItems: {},
 
         charName: "Ilea Iulian",
@@ -344,7 +347,10 @@ const inventoryMenu = new Vue({
                         const itemSlot = $(ui.draggable).attr("data-itemSlot");
                         const slotId = $(this).attr("data-slotId");
 
-                        if (itemWhere == "main") {
+                        if (itemWhere == "main" && !inventoryMenu.blockFastSlots[inventoryMenu.userItems[itemSlot].item]) {
+                            inventoryMenu.blockFastSlots[inventoryMenu.userItems[itemSlot].item] = true
+                            inventoryMenu.fastSlots[slotId] = inventoryMenu.userItems[itemSlot].item
+
                             $("#fastSlot-" + slotId).append(`
                                 <img onerror = "handleImageError(this)" src = "img/${inventoryMenu.userItems[itemSlot].item}.png" data-fastSlotId = "${slotId}">
                             `)
@@ -356,6 +362,7 @@ const inventoryMenu = new Vue({
                             $("#fastSlot-" + slotId + " > img").on( "contextmenu", function() {
                                 $("#fastSlot-" + slotId).html(`<p>${Number(slotId) + 1}</p>`);
                                 sendPost("inventory:setFastSlot", [slotId, false])
+                                inventoryMenu.blockFastSlots[inventoryMenu.userItems[itemSlot].item] = false
                             });
                             
                             sendPost("inventory:setFastSlot", [slotId, inventoryMenu.userItems[itemSlot].item])
@@ -371,6 +378,9 @@ const inventoryMenu = new Vue({
                     if (inventoryMenu.fastSlots[slotId]) {                        
                         const itemExist = inventoryMenu.itemExist(inventoryMenu.userItems, inventoryMenu.fastSlots[slotId])
 
+                        inventoryMenu.blockFastSlots[inventoryMenu.userItems[itemExist].item] = true
+                        inventoryMenu.fastSlots[slotId] = inventoryMenu.userItems[itemExist].item
+
                         $("#fastSlot-" + slotId).append(`
                             <img onerror = "handleImageError(this)" src = "img/${inventoryMenu.userItems[itemExist].item}.png" data-fastSlotId = "${slotId}">
                         `)
@@ -383,6 +393,7 @@ const inventoryMenu = new Vue({
                         $("#fastSlot-" + slotId + " > img").on( "contextmenu", function() {
                             $("#fastSlot-" + slotId).html(`<p>${slotId + 1}</p>`);
                             sendPost("inventory:setFastSlot", [String(slotId), false])
+                            inventoryMenu.blockFastSlots[inventoryMenu.userItems[itemExist].item] = false
                         });
                     }
                 }
@@ -510,7 +521,7 @@ const inventoryMenu = new Vue({
             const itemExist = inventoryMenu.itemExist(inventoryMenu.userItems, item);
 
             if (itemExist != "" && this.userItems[itemExist]) {
-                sendPost('inventory:giveItem', [itemExist, amount]);
+                sendPost('inventory:giveItem', [item, amount]);
                 this.destroy();
             }
 
